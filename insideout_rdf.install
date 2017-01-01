@@ -118,7 +118,8 @@ $vocabMachineName = variable_get('insideout_rdf_vocabulary_machine_name');
       field_create_instance($instance);
     }
 
-      drupal_goto($base_url.'/admin/structure/rdf-to-taxnomy');
+      //uncomment this line to start importing the data once the module enabled.
+      // drupal_goto($base_url.'/admin/structure/rdf-to-taxnomy');
 }
 
 /**
