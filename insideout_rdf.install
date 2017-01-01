@@ -1,0 +1,148 @@
+<?php
+/**
+ * @file
+ * Insideout RDF installation
+ */
+
+ // Set vocabulary machine name as persistent variable because we'r gonna use it in multiple files.
+ variable_set('insideout_rdf_vocabulary_machine_name', 'interactivity_level');
+
+
+/**
+ * Implements hook_install().
+ */
+function insideout_rdf_install() {
+global $base_url;
+$vocabMachineName = variable_get('insideout_rdf_vocabulary_machine_name');
+
+
+  // Get localization function for installation as t() may be unavailable.
+  $t = get_t();
+
+  // Check if the taxonomy already exists, if not, then create it.
+  if(!taxonomy_vocabulary_machine_name_load($vocabMachineName)){
+     $vocab = (object) array(
+       'name' => 'Interactivity Level',
+       'machine_name' => $vocabMachineName,
+       'description' => $t('Vocabulary to save custom imported rdf'),
+       'module' => 'insideout_rdf',
+     );
+     $status = taxonomy_vocabulary_save($vocab);
+     // Give user feedback.
+     drupal_set_message( $t('Interactivity Level vocabulary created'));
+   }else{
+    // Give user feedback.
+     drupal_set_message( $t('There is already a vocabulary with machine name : ') . $vocabMachineName);
+   }
+
+   // Define fields.
+   $fields = array();
+   $fields['field_skos_definition'] = array(
+     'field_name' => 'field_skos_definition',
+     'type' => 'text_long',
+     'default_widget' =>  'text_textarea',
+   );
+   $fields['field_identifier'] = array(
+     'field_name' => 'field_identifier',
+     'type' => 'text',
+   );
+   $fields['field_skos_notation'] = array(
+     'field_name' => 'field_skos_notation',
+     'type' => 'text',
+   );
+   $fields['field_uri'] = array(
+     'field_name' => 'field_uri',
+     'type' => 'link_field',
+   );
+
+   // Create fields.
+   foreach ($fields as $field) {
+     $field_instance = field_info_field($field['field_name']);
+     // Check if field name already taken, if not, create it.
+     if (empty($field_instance)) {
+         field_create_field($field);
+       }else{
+         drupal_set_message($t('field name ') . $field_instance['field_name'] . $t(' already exists, won\'t create it again.'));
+       }
+   }
+
+   // Create Fields Instances.
+   $instances = array();
+
+   $instances['field_skos_definition'] = array(
+     'field_name' => 'field_skos_definition',
+     'label' => $t('SKOS Definition'),
+     'description' => $t('skos:definition'),
+     'widget' => array(
+       'type' => 'text_textarea',
+       'settings' => array(
+          'rows' => '5',
+        ),
+     )
+   );
+   $instances['field_identifier'] = array(
+     'field_name' => 'field_identifier',
+     'label' => $t('Identifier'),
+     'description' => $t('dct:identifier'),
+     'widget' => array(
+       'type' => 'text_textfield',
+     )
+   );
+   $instances['field_skos_notation'] = array(
+     'field_name' => 'field_skos_notation',
+     'label' => $t('SKOS Notation'),
+     'description' => $t('skos:notation'),
+     'widget' => array(
+       'type' => 'text_textfield',
+     )
+   );
+   $instances['field_uri'] = array(
+     'field_name' => 'field_uri',
+     'label' => $t('Link'),
+     'description' => $t('rdf:description->rdf:about'),
+     'widget' => array(
+        'type'    => 'link',
+      ),
+      'settings' => array(
+      'title' => 'none', // value = Static Title, none = No Title,  required = Required Title, optional = Optional Title.
+      'attributes' => array(
+        'target' => '_blank',
+        )
+      )
+    );
+
+    // Attach instances for the our vocabulary.
+    foreach ($instances as $instance) {
+      $instance['entity_type'] = 'taxonomy_term';
+      $instance['bundle'] = $vocabMachineName;
+      field_create_instance($instance);
+    }
+
+      drupal_goto($base_url.'/admin/structure/rdf-to-taxnomy');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function insideout_rdf_uninstall() {
+  // Get Interactivity Level vocabulary instance.
+  $vocabMachineName = variable_get('insideout_rdf_vocabulary_machine_name');
+  $vocab = taxonomy_vocabulary_machine_name_load($vocabMachineName);
+
+  // Check if there is Interactivity Level Vocabulary, and if found, delete its terms then delete the vocabulary itself.
+  if(taxonomy_vocabulary_machine_name_load($vocabMachineName)){
+
+    // Delete all Interactivity Level terms if any.
+    if($terms = taxonomy_get_tree($vocab->vid)){
+      foreach ($terms as $term) {
+        taxonomy_term_delete($term->tid);
+      }
+      // Give user feedback.
+       drupal_set_message(count($terms). t(' terms deleted for '). $vocabMachineName . t(' vocabulary.'));
+    }
+    // Then, delete the Vocabulary itself.
+    taxonomy_vocabulary_delete($vocab->vid);
+    // Give user feedback.
+     drupal_set_message( $vocabMachineName . t(' Vocabulary deleted. ') );
+  }
+}

@@ -1,0 +1,73 @@
+<?php
+
+
+// Load insideout_rdf.inc file.
+module_load_include('inc','insideout_rdf');
+
+/**
+ * Implements hook_help().
+ */
+function insideout_rdf_help($path, $arg){
+  switch ($path) {
+    case 'admin/help#insideout_rdf':
+      $ret_val = '<h3>' . t('About') .'</h3>';
+      $ret_val .= '<p>' . t('Creates taxonomy then imports rdf data from url to it\'s terms ') . '</p>';
+      $ret_val .= '<p>' . t('This module created by Serag, excuse me for any coding inconveniences, do not hesitate to contact me if there is any suggestion or issue ') .'<a target="_blank" href="https://eg.linkedin.com/in/abdoserag90">'.'Linkedin'.'</a>' .'</p>';
+      $ret_val .= '<p>' . t('Thank You :) ') .'</p>';
+      return $ret_val;
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function insideout_rdf_menu() {
+    // Admin configuration.
+    $items['admin/config/insideout-rdf'] = array(
+        'title' => 'Custom RDF configuration',
+        'description' => 'Custom RDF configuration and setting',
+        'access arguments' => array('administer custom rdf'),
+    );
+
+    // Admin configuration - Settings.
+    $items['admin/config/insideout-rdf/manage'] = array(
+        'title' => 'Custom RDF to taxonomy configuration',
+        'description' => 'Administer Custom RDF to taxonomy Settings and Configurations',
+        'access arguments' => array('administer custom rdf'),
+        'page callback' => 'managePageCallback',
+        // 'page arguments'=> array('insideout_rdf_admin_settings_form'),
+    );
+    $items['admin/structure/rdf-to-taxnomy'] = array(
+      'title' => 'Import RDF to Taxonomy',
+      'description' => 'Import RDF xml file to taxonomy terms',
+      'access arguments' => array('administer custom rdf'),
+      'page callback' => 'structureMenuCallback',
+      'weight' => 10
+    );
+
+    return $items;
+}
+
+function managePageCallback(){
+  return 'This page mainly used for test purposes, i\'ll delete it later ';
+}
+
+
+function structureMenuCallback(){
+  importTermsFromRdfSource();
+  drupal_goto('<front>');
+  return '';
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+ function insideout_rdf_permission(){
+   return array(
+     'administer custom rdf' => array(
+       'title' => t('Administer Custom Taxonomy to RDF Module'),
+       'description'=> t('Perform administration tasks on custom Taxonomy to RDF module'),
+     ),
+   );
+ }

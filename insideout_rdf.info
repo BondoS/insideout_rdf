@@ -1,0 +1,10 @@
+
+name = Custom RDF to Taxonomy
+description = Imports taxonomy terms from an online RDF source
+package = Insideout Custom
+core = 7.x
+configure = admin/config/insideout-rdf/manage
+dependencies[] = link
+dependencies[] = taxonomy_xml
+
+files[] = insideout_rdf.inc
